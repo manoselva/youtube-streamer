@@ -284,18 +284,19 @@ C:\Users\user\AppData\Local\Temp\New folder\
 %%{init: {
   "theme": "dark",
   "themeVariables": {
-    "background": "#0d1117",
-    "primaryColor": "#161b22",
-    "primaryTextColor": "#e6edf3",
-    "primaryBorderColor": "#30363d",
-    "lineColor": "#58A6FF",
-    "secondaryColor": "#1f2937",
+    "background": "#0b0f14",
+    "primaryColor": "#121826",
+    "primaryTextColor": "#e5e7eb",
+    "primaryBorderColor": "#2a2f3a",
+    "lineColor": "#6b7280",
+    "secondaryColor": "#0f172a",
     "tertiaryColor": "#111827",
     "fontFamily": "Inter, Segoe UI, sans-serif",
     "fontSize": "14px"
   }
 }}%%
-graph TD
+
+flowchart LR
     A[Run Script with YouTube URL]
     B{Check Cache}
     C[Load URLs from Cache]
@@ -307,6 +308,7 @@ graph TD
     I[Save URLs to Cache]
     J[Launch VLC]
     K[Stream Video with Audio & Subtitles]
+
     %% Flow
     A --> B
     B -->|Found| C
@@ -319,19 +321,23 @@ graph TD
     C --> J
     I --> J
     J --> K
-    %% Dark-Theme Node Styles
-    classDef startNode fill:#1f2937,stroke:#60a5fa,color:#e6edf3,stroke-width:2,rx:12,ry:12;
-    classDef processNode fill:#161b22,stroke:#30363d,color:#e6edf3,stroke-width:1.5,rx:10,ry:10;
-    classDef cacheNode fill:#102a43,stroke:#58A6FF,color:#dbeafe,stroke-width:2,rx:10,ry:10;
+
+    %% Dark-themed beautiful node styles
+    classDef startNode fill:#0f172a,stroke:#38bdf8,color:#e5e7eb,stroke-width:2,rx:12,ry:12;
+    classDef decisionNode fill:#111827,stroke:#818cf8,color:#e5e7eb,stroke-width:2,rx:12,ry:12;
+    classDef cacheNode fill:#0b2c43,stroke:#60a5fa,color:#dbeafe,stroke-width:2,rx:10,ry:10;
+    classDef processNode fill:#111827,stroke:#2a2f3a,color:#e5e7eb,stroke-width:1.5,rx:10,ry:10;
     classDef mediaNode fill:#0f2f2a,stroke:#34d399,color:#d1fae5,stroke-width:2,rx:10,ry:10;
-    classDef finalNode fill:#0a2e24,stroke:#10b981,color:#d1fae5,stroke-width:3,rx:12,ry:12;
-    %% Assign Styles
+    classDef finalNode fill:#042f2e,stroke:#2dd4bf,color:#d1fae5,stroke-width:3,rx:14,ry:14;
+
+    %% Assign styles
     class A startNode;
-    class B processNode;
+    class B decisionNode;
     class C cacheNode;
     class D,E,F,G,H,I processNode;
     class J mediaNode;
     class K finalNode;
+
 ```
 
 ---
