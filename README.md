@@ -159,27 +159,38 @@ If installed, you'll see the version number. To find its location:
 
    **For WinGet installation:**
    ```powershell
-   C:\Users\user\AppData\Local\Microsoft\WinGet\Packages\yt-dlp.yt-dlp_Microsoft.Winget.Source_8wekyb3d8bbwe\yt-dlp.exe
+   C:\Users\<USERNAME>\AppData\Local\Microsoft\WinGet\Packages\yt-dlp.yt-dlp_Microsoft.Winget.Source_8wekyb3d8bbwe\yt-dlp.exe
    ```
+   
+   Replace `<USERNAME>` with your actual Windows username.
 
    **To find your path, run:**
    ```powershell
    (Get-Command yt-dlp).Source
    ```
 
-2. The script is already configured with the WinGet path. If yours is different, update line 8 in the script:
+2. Update line 8 in the script with your actual path:
    ```powershell
-   $ytdlpPath = "YOUR_YTDLP_PATH_HERE"
+   $ytdlpPath = "C:\Users\<USERNAME>\AppData\Local\Microsoft\WinGet\Packages\yt-dlp.yt-dlp_Microsoft.Winget.Source_8wekyb3d8bbwe\yt-dlp.exe"
    ```
+   
+   Replace `<USERNAME>` with your Windows username.
 
 ### Step 5: Configure Cache Directory
 
 The script uses this default cache directory:
 ```
-C:\Users\user\AppData\Local\Temp\New folder
+C:\Users\<USERNAME>\AppData\Local\Temp\New folder
 ```
 
+Replace `<USERNAME>` with your Windows username.
+
 To change it, update line 11 in the script:
+```powershell
+$baseDir = "C:\Users\<USERNAME>\AppData\Local\Temp\New folder"
+```
+
+Or set your preferred custom path:
 ```powershell
 $baseDir = "YOUR_PREFERRED_CACHE_PATH"
 ```
@@ -253,7 +264,7 @@ The script uses these VLC arguments:
 The script creates the following structure:
 
 ```
-C:\Users\user\AppData\Local\Temp\New folder\
+C:\Users\<USERNAME>\AppData\Local\Temp\New folder\
 ├── video_cache.log                          # Cache index
 ├── Video Title 1\
 │   ├── urls.txt                             # Saved video/audio URLs
@@ -264,17 +275,21 @@ C:\Users\user\AppData\Local\Temp\New folder\
 └── ...
 ```
 
+Replace `<USERNAME>` with your Windows username.
+
 ### Cache Log Format
 
 ```json
 [
   {
     "YoutubeUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
-    "VideoDir": "C:\\Users\\user\\AppData\\Local\\Temp\\New folder\\Video Title",
+    "VideoDir": "C:\\Users\\<USERNAME>\\AppData\\Local\\Temp\\New folder\\Video Title",
     "CachedOn": "12/06/2025 10:30:45 AM"
   }
 ]
 ```
+
+Replace `<USERNAME>` with your Windows username.
 
 ---
 
