@@ -8,9 +8,31 @@
 
 **Stream YouTube videos directly in VLC with intelligent caching**
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Configuration](#️-configuration) • [Troubleshooting](#-troubleshooting)
-
 </div>
+
+---
+
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [📋 Prerequisites](#-prerequisites)
+- [🔧 Installation](#-installation)
+  - [Step 1: Install VLC Media Player](#step-1-install-vlc-media-player)
+  - [Step 2: Install yt-dlp](#step-2-install-yt-dlp)
+  - [Step 3: Download the Script](#step-3-download-the-script)
+  - [Step 4: Configure yt-dlp Path](#step-4-configure-yt-dlp-path)
+  - [Step 5: Configure Cache Directory](#step-5-configure-cache-directory)
+  - [Step 6: Enable Script Execution](#step-6-enable-script-execution)
+- [🚀 Usage](#-usage)
+- [⚙️ Configuration](#️-configuration)
+- [📁 Cache Structure](#-cache-structure)
+- [🎯 How It Works](#-how-it-works)
+- [🐛 Troubleshooting](#-troubleshooting)
+- [📊 Performance](#-performance)
+- [🔒 Privacy & Security](#-privacy--security)
+- [📝 License](#-license)
+- [🤝 Contributing](#-contributing)
+- [⭐ Credits](#-credits)
 
 ---
 
@@ -62,12 +84,63 @@ winget install yt-dlp.yt-dlp
 
 #### Option B: Manual Installation
 
-1. Download `yt-dlp.exe` from:
+1. Visit the yt-dlp releases page:
    ```
    https://github.com/yt-dlp/yt-dlp/releases/latest
    ```
 
-2. Place it in a directory in your PATH or note its location
+2. Download `yt-dlp.exe` from the Assets section
+
+3. Create a directory for yt-dlp:
+   ```powershell
+   New-Item -ItemType Directory -Path "C:\Program Files\yt-dlp" -Force
+   ```
+
+4. Move `yt-dlp.exe` to this directory:
+   ```powershell
+   Move-Item -Path "Downloads\yt-dlp.exe" -Destination "C:\Program Files\yt-dlp\yt-dlp.exe"
+   ```
+
+5. Add to PATH (Optional but recommended):
+   - Open System Properties → Advanced → Environment Variables
+   - Under System Variables, find and edit "Path"
+   - Add new entry: `C:\Program Files\yt-dlp`
+   - Click OK to save
+
+6. Verify installation:
+   ```powershell
+   yt-dlp --version
+   ```
+
+#### Option C: Using Chocolatey
+
+If you have Chocolatey installed:
+
+```powershell
+choco install yt-dlp
+```
+
+#### Option D: Using Scoop
+
+If you have Scoop installed:
+
+```powershell
+scoop install yt-dlp
+```
+
+#### Checking if yt-dlp is Already Installed
+
+Run this command to check:
+
+```powershell
+yt-dlp --version
+```
+
+If installed, you'll see the version number. To find its location:
+
+```powershell
+(Get-Command yt-dlp).Source
+```
 
 ### Step 3: Download the Script
 
@@ -222,7 +295,6 @@ C:\Users\user\AppData\Local\Temp\New folder\
     "fontSize": "14px"
   }
 }}%%
-
 graph TD
     A[Run Script with YouTube URL]
     B{Check Cache}
@@ -235,7 +307,6 @@ graph TD
     I[Save URLs to Cache]
     J[Launch VLC]
     K[Stream Video with Audio & Subtitles]
-
     %% Flow
     A --> B
     B -->|Found| C
@@ -248,14 +319,12 @@ graph TD
     C --> J
     I --> J
     J --> K
-
     %% Dark-Theme Node Styles
     classDef startNode fill:#1f2937,stroke:#60a5fa,color:#e6edf3,stroke-width:2,rx:12,ry:12;
     classDef processNode fill:#161b22,stroke:#30363d,color:#e6edf3,stroke-width:1.5,rx:10,ry:10;
     classDef cacheNode fill:#102a43,stroke:#58A6FF,color:#dbeafe,stroke-width:2,rx:10,ry:10;
     classDef mediaNode fill:#0f2f2a,stroke:#34d399,color:#d1fae5,stroke-width:2,rx:10,ry:10;
     classDef finalNode fill:#0a2e24,stroke:#10b981,color:#d1fae5,stroke-width:3,rx:12,ry:12;
-
     %% Assign Styles
     class A startNode;
     class B processNode;
@@ -263,7 +332,6 @@ graph TD
     class D,E,F,G,H,I processNode;
     class J mediaNode;
     class K finalNode;
-
 ```
 
 ---
@@ -364,4 +432,4 @@ If this script helps you, give it a ⭐!
 
 **Made with ❤️ for the community**
 
-</div>
+</di
