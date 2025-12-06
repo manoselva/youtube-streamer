@@ -432,4 +432,4 @@ If this script helps you, give it a ⭐!
 
 **Made with ❤️ for the community**
 
-</di
+</div>
