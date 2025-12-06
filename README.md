@@ -208,18 +208,62 @@ C:\Users\user\AppData\Local\Temp\New folder\
 ## 🎯 How It Works
 
 ```mermaid
+%%{init: {
+  "theme": "dark",
+  "themeVariables": {
+    "background": "#0d1117",
+    "primaryColor": "#161b22",
+    "primaryTextColor": "#e6edf3",
+    "primaryBorderColor": "#30363d",
+    "lineColor": "#58A6FF",
+    "secondaryColor": "#1f2937",
+    "tertiaryColor": "#111827",
+    "fontFamily": "Inter, Segoe UI, sans-serif",
+    "fontSize": "14px"
+  }
+}}%%
+
 graph TD
-    A[Run Script with YouTube URL] --> B{Check Cache}
-    B -->|Found| C[Load URLs from Cache]
-    B -->|Not Found| D[Fetch Video Title]
-    D --> E[Create Video Directory]
-    E --> F[Extract Video URL]
-    F --> G[Extract Audio URL]
-    G --> H[Download Subtitles]
-    H --> I[Save URLs to Cache]
-    C --> J[Launch VLC]
+    A[Run Script with YouTube URL]
+    B{Check Cache}
+    C[Load URLs from Cache]
+    D[Fetch Video Title]
+    E[Create Video Directory]
+    F[Extract Video URL]
+    G[Extract Audio URL]
+    H[Download Subtitles]
+    I[Save URLs to Cache]
+    J[Launch VLC]
+    K[Stream Video with Audio & Subtitles]
+
+    %% Flow
+    A --> B
+    B -->|Found| C
+    B -->|Not Found| D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    C --> J
     I --> J
-    J --> K[Stream Video with Audio & Subtitles]
+    J --> K
+
+    %% Dark-Theme Node Styles
+    classDef startNode fill:#1f2937,stroke:#60a5fa,color:#e6edf3,stroke-width:2,rx:12,ry:12;
+    classDef processNode fill:#161b22,stroke:#30363d,color:#e6edf3,stroke-width:1.5,rx:10,ry:10;
+    classDef cacheNode fill:#102a43,stroke:#58A6FF,color:#dbeafe,stroke-width:2,rx:10,ry:10;
+    classDef mediaNode fill:#0f2f2a,stroke:#34d399,color:#d1fae5,stroke-width:2,rx:10,ry:10;
+    classDef finalNode fill:#0a2e24,stroke:#10b981,color:#d1fae5,stroke-width:3,rx:12,ry:12;
+
+    %% Assign Styles
+    class A startNode;
+    class B processNode;
+    class C cacheNode;
+    class D,E,F,G,H,I processNode;
+    class J mediaNode;
+    class K finalNode;
+
 ```
 
 ---
