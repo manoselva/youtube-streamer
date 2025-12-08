@@ -45,6 +45,9 @@
 - ⚡ **Fast Loading** - Cached videos load instantly without re-fetching
 - 🎵 **Merged Audio** - Seamlessly combines video and audio streams
 - 📊 **Chapter Support** - Includes embedded chapters when available
+- 🔄 **Expired URL Handler** - Interactive prompt to refresh expired cached URLs
+- 🎨 **Beautiful CLI** - Colorful output with status indicators
+- 📂 **Organized Cache** - Stores video details in named directories
 
 ---
 
@@ -209,17 +212,24 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ### Basic Usage
 
-1. Open PowerShell
+1. Open PowerShell (can be run from any directory)
 
-2. Navigate to your VLC directory:
-   ```powershell
-   cd "C:\Program Files (x86)\VideoLAN\VLC"
-   ```
-
-3. Run the script with a YouTube URL:
+2. Run the script with a YouTube URL:
    ```powershell
    .\stream-youtube.ps1 "https://www.youtube.com/watch?v=VIDEO_ID"
    ```
+
+3. VLC will launch and start playing the video
+
+4. After VLC launches, you'll see a prompt:
+   ```
+   [?] Did VLC show an error? (Y/N)
+       Press Y to clear cache and fetch fresh URLs
+       Press any other key to exit
+   ```
+
+5. **If video plays fine:** Press any key to exit the script
+6. **If VLC shows error:** Press `Y` to automatically clear cache and retry with fresh URLs
 
 ### Examples
 
@@ -235,6 +245,16 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Second run - loads from cache instantly
 .\stream-youtube.ps1 "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+**Handling expired URLs:**
+```powershell
+# Run the script
+.\stream-youtube.ps1 "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+# If VLC shows error, press Y when prompted
+# Script automatically clears cache and fetches fresh URLs
+# VLC relaunches with working stream
 ```
 
 ---
@@ -299,19 +319,18 @@ Replace `<USERNAME>` with your Windows username.
 %%{init: {
   "theme": "dark",
   "themeVariables": {
-    "background": "#0b0f14",
-    "primaryColor": "#121826",
-    "primaryTextColor": "#e5e7eb",
-    "primaryBorderColor": "#2a2f3a",
-    "lineColor": "#6b7280",
-    "secondaryColor": "#0f172a",
+    "background": "#0d1117",
+    "primaryColor": "#161b22",
+    "primaryTextColor": "#e6edf3",
+    "primaryBorderColor": "#30363d",
+    "lineColor": "#58A6FF",
+    "secondaryColor": "#1f2937",
     "tertiaryColor": "#111827",
     "fontFamily": "Inter, Segoe UI, sans-serif",
     "fontSize": "14px"
   }
 }}%%
-
-flowchart LR
+graph TD
     A[Run Script with YouTube URL]
     B{Check Cache}
     C[Load URLs from Cache]
@@ -323,7 +342,6 @@ flowchart LR
     I[Save URLs to Cache]
     J[Launch VLC]
     K[Stream Video with Audio & Subtitles]
-
     %% Flow
     A --> B
     B -->|Found| C
@@ -336,23 +354,19 @@ flowchart LR
     C --> J
     I --> J
     J --> K
-
-    %% Dark-themed beautiful node styles
-    classDef startNode fill:#0f172a,stroke:#38bdf8,color:#e5e7eb,stroke-width:2,rx:12,ry:12;
-    classDef decisionNode fill:#111827,stroke:#818cf8,color:#e5e7eb,stroke-width:2,rx:12,ry:12;
-    classDef cacheNode fill:#0b2c43,stroke:#60a5fa,color:#dbeafe,stroke-width:2,rx:10,ry:10;
-    classDef processNode fill:#111827,stroke:#2a2f3a,color:#e5e7eb,stroke-width:1.5,rx:10,ry:10;
+    %% Dark-Theme Node Styles
+    classDef startNode fill:#1f2937,stroke:#60a5fa,color:#e6edf3,stroke-width:2,rx:12,ry:12;
+    classDef processNode fill:#161b22,stroke:#30363d,color:#e6edf3,stroke-width:1.5,rx:10,ry:10;
+    classDef cacheNode fill:#102a43,stroke:#58A6FF,color:#dbeafe,stroke-width:2,rx:10,ry:10;
     classDef mediaNode fill:#0f2f2a,stroke:#34d399,color:#d1fae5,stroke-width:2,rx:10,ry:10;
-    classDef finalNode fill:#042f2e,stroke:#2dd4bf,color:#d1fae5,stroke-width:3,rx:14,ry:14;
-
-    %% Assign styles
+    classDef finalNode fill:#0a2e24,stroke:#10b981,color:#d1fae5,stroke-width:3,rx:12,ry:12;
+    %% Assign Styles
     class A startNode;
-    class B decisionNode;
+    class B processNode;
     class C cacheNode;
     class D,E,F,G,H,I processNode;
     class J mediaNode;
     class K finalNode;
-
 ```
 
 ---
@@ -363,21 +377,21 @@ flowchart LR
 
 **Solution:**
 - Verify yt-dlp is installed: `yt-dlp --version`
-- Update the `$ytdlpPath` variable with correct path
+- Update the `$ytdlpPath` variable in the script with correct path
 - Reinstall yt-dlp if necessary
 
-### Issue: "vlc.exe not found in current directory"
+### Issue: "vlc.exe not found"
 
 **Solution:**
-- Navigate to VLC directory: `cd "C:\Program Files (x86)\VideoLAN\VLC"`
-- Or update script to use full VLC path
+- Verify VLC is installed at: `C:\Program Files (x86)\VideoLAN\VLC\vlc.exe`
+- Update the `$vlcPath` variable in the script if your VLC is in a different location
 
 ### Issue: "Cannot validate argument on parameter 'ArgumentList'"
 
 **Solution:**
 - This happens when cache URLs are invalid
-- Delete the cache directory and try again
-- Check if the YouTube video is available in your region
+- Press `Y` when prompted "Did VLC show an error?"
+- Script will automatically clear cache and fetch fresh URLs
 
 ### Issue: Script execution is disabled
 
@@ -393,12 +407,19 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 - Manually load subtitles in VLC: `Subtitle > Add Subtitle File`
 - Ensure video has available subtitles on YouTube
 
-### Issue: Cache not working
+### Issue: VLC shows error "Your input can't be opened"
 
 **Solution:**
-- Check if `video_cache.log` exists in cache directory
-- Verify cache directory has write permissions
-- Delete `video_cache.log` to rebuild cache
+- Cached URLs have expired (YouTube URLs typically expire after 6 hours)
+- When prompted "Did VLC show an error?", press `Y`
+- Script will automatically fetch fresh URLs and relaunch VLC
+
+### Issue: Video quality is low
+
+**Solution:**
+- The script automatically selects the best available quality
+- Check your internet connection speed
+- Some videos may not have higher quality available
 
 ---
 
@@ -415,10 +436,11 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ## 🔒 Privacy & Security
 
-- ✅ No data is sent to external servers (except YouTube)
+- ✅ No data is sent to external servers (except YouTube and CDN for streams)
 - ✅ All cache is stored locally on your machine
-- ✅ URLs expire after ~6 hours (YouTube limitation)
+- ✅ URLs expire after ~6 hours (YouTube limitation) - handled automatically
 - ✅ No personal information is logged
+- ✅ No background processes or services installed
 
 ---
 
