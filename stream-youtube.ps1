@@ -45,8 +45,6 @@ Write-Host "`n[*] Checking cache for previously processed video..." -ForegroundC
 # Check if video was previously processed
 $cached = $false
 $videoDir = $null
-$videoUrl = $null
-$audioUrl = $null
 $subtitleFile = $null
 
 if (Test-Path $logFile) {
@@ -63,57 +61,47 @@ if (Test-Path $logFile) {
     if ($existingEntry) {
         $videoDir = $existingEntry.VideoDir
         
-        # Check if directory and urls.txt still exist
-        $urlsFile = Join-Path $videoDir "urls.txt"
-        if ((Test-Path $videoDir) -and (Test-Path $urlsFile)) {
-            Write-Host "[+] Found cached video! Loading from cache..." -ForegroundColor $colors.Success
+        # Check if directory still exists
+        if (Test-Path $videoDir) {
+            Write-Host "[+] Found cached video directory!" -ForegroundColor $colors.Success
             Write-Host "    Directory: $videoDir" -ForegroundColor $colors.Info
             
-            # Read URLs from file line by line
-            $urlLines = Get-Content $urlsFile
-            $videoUrlLine = $null
-            $audioUrlLine = $null
-            
-            for ($i = 0; $i -lt $urlLines.Length; $i++) {
-                if ($urlLines[$i] -eq "Video URL:" -and $i + 1 -lt $urlLines.Length) {
-                    $videoUrlLine = $urlLines[$i + 1].Trim()
-                }
-                if ($urlLines[$i] -eq "Audio URL:" -and $i + 1 -lt $urlLines.Length) {
-                    $audioUrlLine = $urlLines[$i + 1].Trim()
-                }
+            # Check for subtitle file
+            $subtitleFiles = Get-ChildItem -Path $videoDir -Filter "subtitle*.srt" -ErrorAction SilentlyContinue
+            if ($subtitleFiles) {
+                $subtitleFile = $subtitleFiles[0].FullName
+                Write-Host "[+] Subtitle file found: $(Split-Path $subtitleFile -Leaf)" -ForegroundColor $colors.Success
             }
             
-            if ($videoUrlLine -and $audioUrlLine -and $videoUrlLine.Length -gt 0 -and $audioUrlLine.Length -gt 0) {
-                $videoUrl = $videoUrlLine
-                $audioUrl = $audioUrlLine
-                
-                # Check for subtitle file
-                $subtitleFiles = Get-ChildItem -Path $videoDir -Filter "subtitle*.srt" -ErrorAction SilentlyContinue
-                if ($subtitleFiles) {
-                    $subtitleFile = $subtitleFiles[0].FullName
-                    Write-Host "[+] Subtitle file found: $(Split-Path $subtitleFile -Leaf)" -ForegroundColor $colors.Success
-                }
-                
-                $cached = $true
-                Write-Host "`n[*] Using cached URLs:" -ForegroundColor $colors.Highlight
-                Write-Host "    Video: $($videoUrl.Substring(0, [Math]::Min(60, $videoUrl.Length)))..." -ForegroundColor $colors.Info
-                Write-Host "    Audio: $($audioUrl.Substring(0, [Math]::Min(60, $audioUrl.Length)))..." -ForegroundColor $colors.Info
-            } else {
-                Write-Host "[!] Failed to parse cached URLs, will fetch new ones." -ForegroundColor $colors.Warning
-            }
+            $cached = $true
         } else {
-            Write-Host "[!] Cached directory or files missing, will fetch new data." -ForegroundColor $colors.Warning
+            Write-Host "[!] Cached directory missing, will create new one." -ForegroundColor $colors.Warning
         }
     }
 }
 
-# If not cached, fetch new URLs
+# If not cached, create directory and download subtitles
 if (-not $cached) {
-    Write-Host "`n[*] Video not in cache. Fetching video information..." -ForegroundColor $colors.Header
+    Write-Host "`n[*] Video not in cache. Setting up..." -ForegroundColor $colors.Header
     
     # Get video title for directory name
-    $videoTitle = & $ytdlpPath --get-title $YoutubeUrl 2>$null
-    $videoTitle = $videoTitle -replace '[\\/:*?"<>|]', '_'
+    $videoTitleOutput = & $ytdlpPath --get-title $YoutubeUrl 2>$null
+    
+    # Handle array output - take first element and convert to string
+    if ($videoTitleOutput -is [Array]) {
+        $videoTitle = [string]$videoTitleOutput[0]
+    } else {
+        $videoTitle = [string]$videoTitleOutput
+    }
+    
+    # Check if title is valid
+    if ([string]::IsNullOrWhiteSpace($videoTitle)) {
+        Write-Host "[X] ERROR: Could not fetch video title. Check the YouTube URL." -ForegroundColor $colors.Error
+        exit 1
+    }
+    
+    # Remove invalid characters
+    $videoTitle = $videoTitle.Trim() -replace '[\\/:*?"<>|]', '_'
     
     # Create directory for this video
     $videoDir = Join-Path $baseDir $videoTitle
@@ -122,44 +110,6 @@ if (-not $cached) {
     }
     
     Write-Host "[+] Video directory created: $(Split-Path $videoDir -Leaf)" -ForegroundColor $colors.Success
-    
-    Write-Host "`n[*] Fetching available formats..." -ForegroundColor $colors.Header
-    
-    # Get all available formats
-    $formatsOutput = & $ytdlpPath -F $YoutubeUrl 2>$null
-    
-    Write-Host "`n[*] Analyzing formats and selecting best quality..." -ForegroundColor $colors.Header
-    
-    # Get video URL (best video+audio combined format, or best video only)
-    $videoUrl = & $ytdlpPath --get-url -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=webm]+bestaudio[ext=webm]/bestvideo+bestaudio/best" $YoutubeUrl 2>$null | Select-Object -First 1
-    
-    # Get audio URL (best audio quality)
-    $audioUrl = & $ytdlpPath --get-url -f "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio" $YoutubeUrl 2>$null | Select-Object -Last 1
-    
-    if (-not $videoUrl -or -not $audioUrl) {
-        Write-Host "[X] ERROR: Failed to extract URLs from YouTube video." -ForegroundColor $colors.Error
-        exit 1
-    }
-    
-    Write-Host "[+] Video URL extracted: $($videoUrl.Substring(0, 60))..." -ForegroundColor $colors.Success
-    Write-Host "[+] Audio URL extracted: $($audioUrl.Substring(0, 60))..." -ForegroundColor $colors.Success
-    
-    # Save URLs to file
-    $urlsFile = Join-Path $videoDir "urls.txt"
-    @"
-Video URL:
-$videoUrl
-
-Audio URL:
-$audioUrl
-
-YouTube URL:
-$YoutubeUrl
-
-Generated on: $(Get-Date)
-"@ | Out-File -FilePath $urlsFile -Encoding UTF8
-    
-    Write-Host "[+] URLs saved to: urls.txt" -ForegroundColor $colors.Success
     
     # Download subtitles
     Write-Host "`n[*] Downloading subtitles..." -ForegroundColor $colors.Header
@@ -210,14 +160,54 @@ Generated on: $(Get-Date)
     Write-Host "[+] Cache log updated successfully!" -ForegroundColor $colors.Success
 }
 
+# ALWAYS fetch fresh URLs for optimal streaming performance
+Write-Host "`n[*] Fetching fresh stream URLs for optimal performance..." -ForegroundColor $colors.Header
+
+# Select the absolute best combined format available (video+audio together)
+# This prioritizes combined streams for better performance over separate video+audio
+# Will select highest resolution available (4K, 2K, 1080p, 720p, etc.)
+$videoUrl = & $ytdlpPath --get-url -f "best" $YoutubeUrl 2>$null | Select-Object -First 1
+
+# Check if we got a combined format or separate streams
+$allUrls = & $ytdlpPath --get-url -f "best" $YoutubeUrl 2>$null
+
+if ($allUrls -is [Array] -and $allUrls.Count -gt 1) {
+    # Separate video and audio streams
+    $audioUrl = $allUrls[1]
+    $useSeparateAudio = $true
+} else {
+    # Combined stream (best for performance)
+    $audioUrl = $null
+    $useSeparateAudio = $false
+}
+
+if (-not $videoUrl) {
+    Write-Host "[X] ERROR: Failed to extract URLs from YouTube video." -ForegroundColor $colors.Error
+    exit 1
+}
+
+if ($useSeparateAudio) {
+    Write-Host "[+] Video URL extracted: $($videoUrl.Substring(0, 60))..." -ForegroundColor $colors.Success
+    Write-Host "[+] Audio URL extracted: $($audioUrl.Substring(0, 60))..." -ForegroundColor $colors.Success
+} else {
+    Write-Host "[+] Combined stream URL extracted: $($videoUrl.Substring(0, 60))..." -ForegroundColor $colors.Success
+    Write-Host "[*] Using single combined stream for optimal performance" -ForegroundColor $colors.Info
+}
+
 # Build VLC command
 Write-Host "`n[*] Launching VLC Media Player..." -ForegroundColor $colors.Highlight
 
 $vlcArgs = @(
     $videoUrl
-    "--input-slave=$audioUrl"
-    "--sub-autodetect-file"
 )
+
+# Add audio slave if separate
+if ($useSeparateAudio -and $audioUrl) {
+    $vlcArgs += "--input-slave=$audioUrl"
+}
+
+# Enable subtitle auto-detection
+$vlcArgs += "--sub-autodetect-file"
 
 # Add subtitle if available
 if ($subtitleFile) {
@@ -226,38 +216,33 @@ if ($subtitleFile) {
 }
 
 # Launch VLC
-Write-Host "[*] Launching VLC Media Player..." -ForegroundColor $colors.Highlight
-
 Start-Process -FilePath $vlcPath -ArgumentList $vlcArgs -NoNewWindow
 
 $separator = "=" * 65
 Write-Host "`n$separator" -ForegroundColor $colors.Highlight
-Write-Host "[+] VLC launched successfully!" -ForegroundColor $colors.Success
+Write-Host "[+] VLC launched successfully with fresh URLs!" -ForegroundColor $colors.Success
 Write-Host "[*] Cache: $(Split-Path $videoDir -Leaf)" -ForegroundColor $colors.Info
 Write-Host "$separator`n" -ForegroundColor $colors.Highlight
 
 # Ask user if there's an error
 Write-Host "`n[?] Did VLC show an error? (Y/N)" -ForegroundColor Yellow
-Write-Host "    Press Y to clear cache and fetch fresh URLs" -ForegroundColor DarkGray
+Write-Host "    Press Y to clear cache and retry" -ForegroundColor DarkGray
 Write-Host "    Press any other key to exit" -ForegroundColor DarkGray
 Write-Host ""
 
 $response = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
 if ($response.Character -eq 'y' -or $response.Character -eq 'Y') {
-    Write-Host "`n[!] Clearing expired cache..." -ForegroundColor $colors.Warning
+    Write-Host "`n[!] Clearing cache..." -ForegroundColor $colors.Warning
     
     # Kill VLC if still running
     Get-Process -Name "vlc" -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 1
     
-    # Delete cached files for this video
+    # Delete entire video directory
     if (Test-Path $videoDir) {
-        $urlsFile = Join-Path $videoDir "urls.txt"
-        if (Test-Path $urlsFile) {
-            Remove-Item $urlsFile -Force -ErrorAction SilentlyContinue
-            Write-Host "[+] Deleted expired URLs" -ForegroundColor $colors.Success
-        }
+        Remove-Item $videoDir -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "[+] Deleted video directory" -ForegroundColor $colors.Success
     }
     
     # Remove from cache log
@@ -285,7 +270,7 @@ if ($response.Character -eq 'y' -or $response.Character -eq 'Y') {
         }
     }
     
-    Write-Host "`n[***] RESTARTING WITH FRESH URLS [***]" -ForegroundColor Cyan
+    Write-Host "`n[***] RESTARTING WITH FRESH SETUP [***]" -ForegroundColor Cyan
     Write-Host "================================================================`n" -ForegroundColor DarkCyan
     
     Start-Sleep -Seconds 1
